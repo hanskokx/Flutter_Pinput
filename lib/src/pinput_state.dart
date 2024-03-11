@@ -71,6 +71,8 @@ class _PinputState extends State<Pinput>
 
   bool get _completed => pin.length == widget.length;
 
+  int? get mainAxisExtent => widget.mainAxisExtent;
+
   @override
   void initState() {
     super.initState();
@@ -480,6 +482,7 @@ class _PinputState extends State<Pinput>
       return _SeparatedRaw(
         separatorBuilder: widget.separatorBuilder,
         mainAxisAlignment: widget.mainAxisAlignment,
+        mainAxisExtent: mainAxisExtent,
         children: Iterable<int>.generate(widget.length).map<Widget>((index) {
           return _PinItem(state: this, index: index);
         }).toList(),

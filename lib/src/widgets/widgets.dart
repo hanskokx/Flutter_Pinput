@@ -25,16 +25,21 @@ class _SeparatedRaw extends StatelessWidget {
   final List<Widget> children;
   final MainAxisAlignment mainAxisAlignment;
   final JustIndexedWidgetBuilder? separatorBuilder;
+  final int? mainAxisExtent;
 
   const _SeparatedRaw({
     required this.children,
     required this.mainAxisAlignment,
+    this.mainAxisExtent,
     this.separatorBuilder,
     Key? key,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    if (mainAxisExtent != null) {
+      debugPrint('mainAxisExtent is not supported yet');
+    }
     final itemCount = max(0, children.length * 2 - 1);
     final indexedList = [for (int i = 0; i < itemCount; i += 1) i];
     return Row(

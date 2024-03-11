@@ -1,31 +1,24 @@
 import 'dart:math';
 import 'dart:ui';
+
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/foundation.dart';
-import 'package:flutter/gestures.dart';
 import 'package:smart_auth/smart_auth.dart';
 import 'package:universal_platform/universal_platform.dart';
 
-part 'pinput_state.dart';
-
-part 'utils/enums.dart';
-
-part 'utils/pinput_constants.dart';
-
-part 'widgets/widgets.dart';
-
 part 'models/pin_theme.dart';
-
+part 'pinput_state.dart';
+part 'utils/enums.dart';
 part 'utils/extensions.dart';
-
-part 'widgets/_pin_item.dart';
-
+part 'utils/pinput_constants.dart';
 part 'utils/pinput_utils_mixin.dart';
-
+part 'widgets/_pin_item.dart';
 part 'widgets/_pinput_selection_gesture_detector_builder.dart';
+part 'widgets/widgets.dart';
 
 /// Flutter package to create easily customizable Pin code input field, that your designers can't even draw in Figma 🤭
 ///
@@ -110,6 +103,7 @@ class Pinput extends StatefulWidget {
     this.scrollPadding = const EdgeInsets.all(20),
     this.contextMenuBuilder = _defaultContextMenuBuilder,
     this.onTapOutside,
+    this.mainAxisExtent,
     Key? key,
   })  : assert(obscuringCharacter.length == 1),
         assert(length > 0),
@@ -210,6 +204,9 @@ class Pinput extends StatefulWidget {
 
   /// Defines how [Pinput] fields are being placed inside [Row]
   final MainAxisAlignment mainAxisAlignment;
+
+  /// Definese how many [Pinput] fields in a given [Row]
+  final int? mainAxisExtent;
 
   /// Defines how [Pinput] and ([errorText] or [errorBuilder]) are being placed inside [Column]
   final CrossAxisAlignment crossAxisAlignment;
