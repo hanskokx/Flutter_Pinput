@@ -4,10 +4,7 @@ class _PinItem extends StatelessWidget {
   final _PinputState state;
   final int index;
 
-  const _PinItem({
-    required this.state,
-    required this.index,
-  });
+  const _PinItem({required this.state, required this.index});
 
   @override
   Widget build(BuildContext context) {
@@ -84,7 +81,6 @@ class _PinItem extends StatelessWidget {
     }
 
     final isActiveField = index == pin.length;
-
     final focused =
         state.effectiveFocusNode.hasFocus || !state.widget.useNativeKeyboard;
     final shouldShowCursor =
