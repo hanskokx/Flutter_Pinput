@@ -30,28 +30,41 @@ class _SeparatedRaw extends StatelessWidget {
   const _SeparatedRaw({
     required this.children,
     required this.mainAxisAlignment,
-    this.mainAxisExtent,
+    required this.mainAxisExtent,
     this.separatorBuilder,
     Key? key,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    if (mainAxisExtent != null) {
-      debugPrint('mainAxisExtent is not supported yet');
-    }
-    final itemCount = max(0, children.length * 2 - 1);
+    final rows = children.length ~/ (mainAxisExtent ?? children.length);
+    final itemCount = max(0, (children.length * 2 / rows) - 1);
     final indexedList = [for (int i = 0; i < itemCount; i += 1) i];
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      mainAxisAlignment: mainAxisAlignment,
-      mainAxisSize: mainAxisAlignment == MainAxisAlignment.center
-          ? MainAxisSize.min
-          : MainAxisSize.max,
-      children: indexedList.map((index) {
-        final itemIndex = index ~/ 2;
-        return index.isEven ? children[itemIndex] : _separator(itemIndex);
-      }).toList(growable: false),
+
+    return Column(
+      children: [
+        ...List.generate(
+          rows,
+          (row) => Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            mainAxisAlignment: mainAxisAlignment,
+            mainAxisSize: mainAxisAlignment == MainAxisAlignment.center
+                ? MainAxisSize.min
+                : MainAxisSize.max,
+            children: indexedList.map((index) {
+              final itemIndex = index ~/ 2;
+              return index.isEven ? children[itemIndex] : _separator(itemIndex);
+            }).toList(growable: false),
+          ),
+        ).map(
+          (row) => rows > 1
+              ? Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: row,
+                )
+              : row,
+        ),
+      ],
     );
   }
 

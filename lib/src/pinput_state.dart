@@ -482,10 +482,15 @@ class _PinputState extends State<Pinput>
       return _SeparatedRaw(
         separatorBuilder: widget.separatorBuilder,
         mainAxisAlignment: widget.mainAxisAlignment,
-        mainAxisExtent: mainAxisExtent,
-        children: Iterable<int>.generate(widget.length).map<Widget>((index) {
-          return _PinItem(state: this, index: index);
-        }).toList(),
+        mainAxisExtent: widget.mainAxisExtent,
+        children: List.generate(widget.length, (index) {
+          final row = index ~/ (widget.mainAxisExtent ?? widget.length) + 1;
+
+          return _PinItem(
+            state: this,
+            index: ((index + 1) * row) - 1,
+          );
+        }),
       );
     }
 
