@@ -82,10 +82,9 @@ class _PinItem extends StatelessWidget {
         style: pinTheme.textStyle,
       );
     }
-    final row =
-        index ~/ (state.widget.mainAxisExtent ?? state.widget.length) + 1;
-    final isActiveField = (index * row) == pin.length;
-    print('index: ${index * row}, row: $row,  isActiveField: $isActiveField');
+
+    final isActiveField = index == pin.length;
+
     final focused =
         state.effectiveFocusNode.hasFocus || !state.widget.useNativeKeyboard;
     final shouldShowCursor =
