@@ -33,7 +33,7 @@ class _PinputState extends State<Pinput>
   FocusNode? _focusNode;
   bool _isHovering = false;
   String? _validatorErrorText;
-  SmartAuth? _smartAuth;
+  SmsRetriever? _smsRetriever;
 
   String? get _errorText => widget.errorText ?? _validatorErrorText;
 
@@ -94,38 +94,19 @@ class _PinputState extends State<Pinput>
 
   /// Android Autofill
   void _maybeInitSmartAuth() async {
-    final isAndroid = UniversalPlatform.isAndroid;
-    final isAutofillEnabled =
-        widget.androidSmsAutofillMethod != AndroidSmsAutofillMethod.none;
-
-    if (isAndroid && isAutofillEnabled) {
-      _smartAuth = SmartAuth();
-      _maybePrintAppSignature();
+    if (_smsRetriever == null && widget.smsRetriever != null) {
+      _smsRetriever = widget.smsRetriever!;
       _listenForSmsCode();
     }
   }
 
-  void _maybePrintAppSignature() async {
-    if (widget.androidSmsAutofillMethod ==
-        AndroidSmsAutofillMethod.smsRetrieverApi) {
-      final res = await _smartAuth!.getAppSignature();
-      debugPrint('Pinput: App Signature for SMS Retriever API Is: $res');
-    }
-  }
-
   void _listenForSmsCode() async {
-    final useUserConsentApi = widget.androidSmsAutofillMethod ==
-        AndroidSmsAutofillMethod.smsUserConsentApi;
-    final res = await _smartAuth!.getSmsCode(
-      useUserConsentApi: useUserConsentApi,
-      matcher: widget.smsCodeMatcher,
-      senderPhoneNumber: widget.senderPhoneNumber,
-    );
-    if (res.succeed && res.codeFound && res.code!.length == widget.length) {
-      _effectiveController.setText(res.code!);
+    final res = await _smsRetriever!.getSmsCode();
+    if (res != null && res.length == widget.length) {
+      _effectiveController.setText(res);
     }
     // Listen for multiple sms codes
-    if (widget.listenForMultipleSmsOnAndroid) {
+    if (_smsRetriever!.listenForMultipleSms) {
       _listenForSmsCode();
     }
   }
@@ -214,7 +195,7 @@ class _PinputState extends State<Pinput>
     widget.controller?.removeListener(_handleTextEditingControllerChanges);
     _focusNode?.dispose();
     _controller?.dispose();
-    _smartAuth?.removeSmsListener();
+    _smsRetriever?.dispose();
     // https://github.com/Tkko/Flutter_Pinput/issues/89
     _ambiguate(WidgetsBinding.instance)!.removeObserver(this);
     super.dispose();
@@ -458,16 +439,25 @@ class _PinputState extends State<Pinput>
     );
   }
 
-  MouseCursor get _effectiveMouseCursor =>
-      MaterialStateProperty.resolveAs<MouseCursor>(
-        widget.mouseCursor ?? MaterialStateMouseCursor.textable,
-        <MaterialState>{
-          if (!isEnabled) MaterialState.disabled,
-          if (_isHovering) MaterialState.hovered,
-          if (effectiveFocusNode.hasFocus) MaterialState.focused,
-          if (hasError) MaterialState.error,
-        },
-      );
+  // TODO: Use WidgetStateProperty instead.
+  MouseCursor get _effectiveMouseCursor {
+    // ignore: deprecated_member_use
+    return MaterialStateProperty.resolveAs<MouseCursor>(
+      // ignore: deprecated_member_use
+      widget.mouseCursor ?? MaterialStateMouseCursor.textable,
+      // ignore: deprecated_member_use
+      <MaterialState>{
+        // ignore: deprecated_member_use
+        if (!isEnabled) MaterialState.disabled,
+        // ignore: deprecated_member_use
+        if (_isHovering) MaterialState.hovered,
+        // ignore: deprecated_member_use
+        if (effectiveFocusNode.hasFocus) MaterialState.focused,
+        // ignore: deprecated_member_use
+        if (hasError) MaterialState.error,
+      },
+    );
+  }
 
   void _semanticsOnTap() {
     if (!_effectiveController.selection.isValid) {
@@ -475,6 +465,26 @@ class _PinputState extends State<Pinput>
           TextSelection.collapsed(offset: _effectiveController.text.length);
     }
     _requestKeyboard();
+  }
+
+  PinItemStateType _getState(int index) {
+    if (!isEnabled) {
+      return PinItemStateType.disabled;
+    }
+
+    if (showErrorState) {
+      return PinItemStateType.error;
+    }
+
+    if (hasFocus && index == selectedIndex.clamp(0, widget.length - 1)) {
+      return PinItemStateType.focused;
+    }
+
+    if (index < selectedIndex) {
+      return PinItemStateType.submitted;
+    }
+
+    return PinItemStateType.following;
   }
 
   Widget _buildFields() {
@@ -485,10 +495,22 @@ class _PinputState extends State<Pinput>
         mainAxisExtent: widget.mainAxisExtent,
         children: List.generate(widget.length, (index) {
           final row = index ~/ (widget.mainAxisExtent ?? widget.length) + 1;
+          final rowIndex = ((index + 1) * row) - 1;
+
+          if (widget._builder != null) {
+            return widget._builder!.itemBuilder.call(
+              context,
+              PinItemState(
+                value: pin.length > index ? pin[index] : '',
+                index: rowIndex,
+                type: _getState(index),
+              ),
+            );
+          }
 
           return _PinItem(
             state: this,
-            index: ((index + 1) * row) - 1,
+            index: rowIndex,
           );
         }),
       );
@@ -568,7 +590,6 @@ class _PinputState extends State<Pinput>
             uniqueIdentifier: autofillId,
             autofillHints: autofillHints,
             currentEditingValue: _effectiveController.value,
-            hintText: 'One Time Code',
           )
         : AutofillConfiguration.disabled;
 

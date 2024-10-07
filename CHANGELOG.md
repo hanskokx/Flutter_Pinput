@@ -1,3 +1,9 @@
+#### 5.0.0 · 7/06/2024
+- Implemented Pinput.builder to build custom Pinput fields
+- Migrated deprecated imperative apply of Flutter's Gradle plugins example app
+- Removed smart_auth dependency which was responsible for SMS autofill (Not everyone might need it and it was causing some issues)
+- [Migration guide](MIGRATION.md)
+
 #### 4.0.0 · 10/02/2024
 - Fixed RECEIVER_EXPORTED exception in android SDK 34 PR
 - Fix "Namespace not specified" error when upgrading to AGP 8.0 PR
